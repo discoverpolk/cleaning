@@ -9,6 +9,7 @@
 
 
 
+
  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
    integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
    crossorigin=""/>
@@ -19,7 +20,7 @@
  <script src="leaflet-fullscreen/Control.FullScreen.min.js"></script>
  <link rel="stylesheet" href="leaflet-fullscreen/Control.FullScreen.css">
 
-
+<script src="leaflet-pip/leaflet-pip.js"></script>
 
 
   <!-- Tabletop to access Google spreadsheets - THANK YOU AMAZING HUMANS WHO CREATED THIS!! LOVE LOVE LOVE-->
@@ -36,13 +37,15 @@
   
   
  <!-- FontAaaawwwwesome -->  
-  <script src="https://use.fontawesome.com/0a9a58d8dc.js"></script>  
+   <link href="/fontawesome/css/all.css" rel="stylesheet"> <!--load all styles -->
+
+
  <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.0.1/leaflet-omnivore.min.js'></script>
 
 
  <!-- FUSE - thanks, Kiro -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.0.4/fuse.min.js"></script>
-	
+<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Raleway" />	
 <link rel="stylesheet" href="css/dp_style.css" />
 
 
@@ -186,13 +189,15 @@ var monthSelector = L.Control.extend({
  
   onAdd: function (map) {
     var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-		container.innerHTML = "<i class='fa fa-times fa-lg' style='float:right;color:#666;' onClick='hideMonthSelector();monthSelectorOn = 0;' ></i><h4 style='margin-top:-3px;color:#666;'>Filters</h4>" ;
+		container.innerHTML = "<i class='fa fa-times-circle fa-2x' style='float:right;color:#027e96; line-height:1em;' onClick='hideMonthSelector();monthSelectorOn = 0;' ></i>" + 
+		"<b style='color:#666;'>Filters</b><br>" ;
 	container.id = 'monthSelector';
 	container.style.display='none';
     container.style.backgroundColor = 'white';
-    container.style.width = '80px';
+    container.style.width = '110px';
     container.style.height = 'auto';
 	container.style.padding = '10px';
+	container.style.fontSize = '120%';
  
     container.onclick = function(){
       
@@ -310,21 +315,69 @@ function style(feature) {
 			}
 var cbdLayer = new L.geoJson;
 
+var coords = [];
+
 $.getJSON("https://discoverpolk.github.io/graffiti/polkcbds.geojson",
             function(data) {
 	        cbdLayer = L.geoJson(data, {
 				style: style,
 				interactive: false,
 				onEachFeature: function (feature, layer) {
-
+						coords.push(feature.geometry.coordinates);
 				}
 				
 			});
 			cbdLayer.addTo(map);
+//			get311data(coords);
+		
 			});
 
 
+function get311data(c) {
 
+/*
+var coordparse = '';
+
+for (i=0;i<=coords.length-1;i++) {
+	for (j=0;j<=coords[i][0][0].length-1; j++) {
+	coordparse += coords[i][0][0][j][0] + " " + coords[i][0][0][j][1] + ",";
+	}
+}
+
+coordparse = coordparse.substring(0,coordparse.length-2); 
+
+
+var multipolygon = "'MULTIPOLYGON(((-122.420263 37.790646,-122.420316 37.790934,-122.420375 37.791159,-122.420408 37.791159,-122.420434 37.791155,-122.420445 37.791155,-122.420515 37.791562,-122.420563 37.791846,-122.420365 37.791876,-122.420397 37.792024,-122.42052 37.792015,-122.42059 37.792372,-122.420788 37.792494,-122.420853 37.792719,-122.42066 37.792757,-122.420686 37.792876,-122.420579 37.792893,-122.420601 37.792982,-122.420756 37.792969,-122.420799 37.793317,-122.420944 37.793385,-122.420982 37.793648,-122.42074 37.79369,-122.420751 37.793787,-122.420858 37.793787,-122.420917 37.794177,-122.421175 37.794279,-122.421223 37.794606,-122.420923 37.794673,-122.4211 37.795636,-122.420139 37.795788,-122.420182 37.79606,-122.421212 37.796034,-122.424189 37.795627,-122.424109 37.795224,-122.423369 37.795305,-122.422913 37.793058,-122.423798 37.792931,-122.423701 37.792478,-122.422811 37.792592,-122.422323 37.790383,-122.420263 37.790646,-122.417904 37.78517,-122.418273 37.785125,-122.418291 37.785218,-122.418356 37.78555,-122.418365 37.785593,-122.419646 37.785434,-122.421289 37.785225,-122.421382 37.785687,-122.423028 37.785482,-122.423219 37.786405,-122.421568 37.786608,-122.422329 37.79037,-122.419036 37.790787,-122.417904 37.7851)))'";
+*/
+
+var querystring = "https://data.sfgov.org/resource/ktji-gk7t.geojson?$where=within_box(point,37.796186,-122.423466,37.784644,-122.417814)&service_name='Street and Sidewalk Cleaning'&requested_datetime>'2010-03-01T00:00:00.000'";
+
+
+console.log(querystring);
+
+$.getJSON(querystring,
+            function(data) {
+			var geofilter = [];
+			for (i=0; i<=data.features.length-1; i++) {
+				if (leafletPip.pointInLayer(data.features[i].geometry.coordinates, cbdLayer).length >0) {
+					geofilter.push(data.features[i]);
+				};
+				
+			}
+			
+	        data311 = L.geoJson(geofilter, {
+				style: style,
+				interactive: false,
+				onEachFeature: function (feature, layer) {
+						
+				}
+				
+			});
+			data311.addTo(map);
+		
+			});
+
+}
 
 
 var infoSidebarOn = false;
@@ -364,7 +417,12 @@ function filterData() {
 }
 
 
-var graffiti = new L.markerClusterGroup();
+
+
+
+
+
+var graffiti = new L.markerClusterGroup({spiderfyDistanceMultiplier:2});
 
 function displayGraf(data) {
 
@@ -473,7 +531,7 @@ function displayInfo (a) {
 		var info = a.target.options.data;
 		var beforepic = info.Before;
 		var afterpic = info.After;
-		
+		console.log(beforepic, afterpic);
 		var beforeclean = cleanlink(beforepic);
 		
 		var afterclean = cleanlink(afterpic);
@@ -488,7 +546,7 @@ function displayInfo (a) {
 
 
 		var all = "<div style = 'padding:20px;font-size:110%; color:'#444'>" +
-		"<b>" + info.Loc + "</b></br>" + 
+		"<b>" + info.Loc + "</b><br>" + 
 		info.Date + "<br><hr>" + 
 		info.Description + 
 		"</div>";
@@ -501,7 +559,7 @@ function displayInfo (a) {
 
 
 			var infoDisplay = 
-			 "<i class='fa fa-times fa-lg' style='float:right' onClick='infoSidebar.toggle();infoSidebarOn=false;' ></i>";						
+			 "<i class='fa fa-times-circle fa-3x' style='float:right;color:#027e96; line-height:em;' onClick='infoSidebar.toggle();infoSidebarOn=false;' ></i>";						
 				infoSidebar.setContent(infoDisplay);
 				infoSidebar._contentContainer.appendChild(deets);
 
